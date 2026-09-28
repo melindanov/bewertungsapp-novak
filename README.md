@@ -50,6 +50,14 @@ https://github.com/melindanov/bewertungsapp-novak
 git add .
 git commit -m "..."
 git push
+
+git tag lab2
+git push origin lab2
+```
+
+```bash
+git status
+git tag
 ```
 
 ## Einheit 1: Installation
@@ -67,9 +75,9 @@ git push
 
 ## Einheit 2: Datenmodell anlegen
 
-* [ ] Ausgefüllte Planungsvorlage: `docs/diagramm/planungsvorlage.html`
-* [ ] Verwendete `model:generate`-Befehle dokumentiert
-* [ ] Screenshot der angelegten Tabellen im DB-Tool: `docs/screenshots/`
+* [x] Ausgefüllte Planungsvorlage: `docs/diagramm/planungsvorlage.html`
+* [x] Verwendete `model:generate`-Befehle dokumentiert
+* [x] Screenshot der angelegten Tabellen im DB-Tool: `docs/screenshots/`
 
 ## Einheit 3: Assoziationen und weitere Modelle
 

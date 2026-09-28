@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planungsvorlage – Bewertungsapp</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --text: #172033;
+      --muted: #64748b;
+      --header: #e2e8f0;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    h1 { margin-top: 0; }
+    h2 { margin-top: 40px; }
+    h3 { margin-top: 30px; }
+    h4 { margin-bottom: 10px; }
+
+    .diagram-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .diagram-toolbar button {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .diagram-toolbar button:hover {
+      background: #f1f5f9;
+    }
+
+    .diagram-hint {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .diagram-wrap {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background:
+        linear-gradient(rgba(148,163,184,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,.12) 1px, transparent 1px),
+        #f8fafc;
+      background-size: 24px 24px;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .diagram-wrap:active { cursor: grabbing; }
+
+    #diagram {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    .entity rect {
+      fill: white;
+      stroke: #475569;
+      stroke-width: 2;
+      rx: 10;
+    }
+
+    .entity .title {
+      font-size: 18px;
+      font-weight: 700;
+      text-anchor: middle;
+      fill: var(--text);
+      pointer-events: none;
+    }
+
+    .entity .small {
+      font-size: 12px;
+      text-anchor: middle;
+      fill: var(--muted);
+      pointer-events: none;
+    }
+
+    .relation-line {
+      stroke: #475569;
+      stroke-width: 2.5;
+    }
+
+    .cardinality {
+      font-size: 15px;
+      font-weight: 700;
+      fill: var(--accent);
+      paint-order: stroke;
+      stroke: white;
+      stroke-width: 7px;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .relation-name {
+      font-size: 12px;
+      fill: var(--muted);
+      paint-order: stroke;
+      stroke: white;
+      stroke-width: 5px;
+    }
+
+    .note {
+      margin: 10px 0 20px;
+      padding: 12px 14px;
+      background: var(--accent-soft);
+      border: 1px solid #93c5fd;
+      border-radius: 8px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: var(--header); }
+
+    code {
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+
+    @media (max-width: 800px) {
+      body { padding: 12px; }
+      main { padding: 18px; }
+      .diagram-wrap { height: 560px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Planungsvorlage – Bewertungsapp</h1>
+
+  <h2>Beziehungsdiagramm</h2>
+  <div class="diagram-toolbar">
+    <button type="button" id="zoomOut">−</button>
+    <button type="button" id="zoomReset">100 %</button>
+    <button type="button" id="zoomIn">+</button>
+    <button type="button" id="resetLayout">Layout zurücksetzen</button>
+  </div>
+  <p class="diagram-hint">
+    Die Entitäten können mit der Maus verschoben werden. Mit dem Mausrad kann das Diagramm gezoomt werden.
+  </p>
+
+  <div class="diagram-wrap" id="diagramWrap">
+    <svg id="diagram" viewBox="0 0 1200 650" aria-label="ER-Diagramm der Bewertungsapp">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#475569"></path>
+        </marker>
+      </defs>
+
+      <g id="scene">
+        <!-- Beziehungen -->
+        <g id="relations">
+          <line id="line-team-member" class="relation-line"></line>
+
+          <line id="line-team-project" class="relation-line"></line>
+
+          <line id="line-project-evaluation" class="relation-line"></line>
+
+          <line id="line-criterion-evaluation" class="relation-line"></line>
+
+          <line id="line-juror-evaluation" class="relation-line"></line>
+        </g>
+
+        <!-- Entitäten -->
+        <g class="entity" data-id="Team" data-x="180" data-y="110">
+          <rect x="0" y="0" width="180" height="80"></rect>
+          <text class="title" x="90" y="34">Team</text>
+          <text class="small" x="90" y="56">id, name, klasse</text>
+        </g>
+
+        <g class="entity" data-id="Member" data-x="510" data-y="55">
+          <rect x="0" y="0" width="180" height="80"></rect>
+          <text class="title" x="90" y="34">Member</text>
+          <text class="small" x="90" y="56">teamId, vorname, nachname</text>
+        </g>
+
+        <g class="entity" data-id="Project" data-x="180" data-y="300">
+          <rect x="0" y="0" width="180" height="80"></rect>
+          <text class="title" x="90" y="34">Project</text>
+          <text class="small" x="90" y="56">teamId, titel, ...</text>
+        </g>
+
+        <g class="entity" data-id="Evaluation" data-x="510" data-y="285">
+          <rect x="0" y="0" width="190" height="90"></rect>
+          <text class="title" x="95" y="38">Evaluation</text>
+          <text class="small" x="95" y="62">projectId, criterionId,</text>
+          <text class="small" x="95" y="77">jurorId, score, comment</text>
+        </g>
+
+        <g class="entity" data-id="Criterion" data-x="890" data-y="180">
+          <rect x="0" y="0" width="180" height="80"></rect>
+          <text class="title" x="90" y="34">Criterion</text>
+          <text class="small" x="90" y="56">name, maxScore, weight</text>
+        </g>
+
+        <g class="entity" data-id="Juror" data-x="890" data-y="390">
+          <rect x="0" y="0" width="180" height="80"></rect>
+          <text class="title" x="90" y="34">Juror</text>
+          <text class="small" x="90" y="56">name, email</text>
+        </g>
+      </g>
+
+        <!-- Kardinalitäten bewusst über den Entitätsboxen, damit 1/n nicht verdeckt werden -->
+        <g id="cardinalities">
+          <text id="card-team-member-a" class="cardinality">1</text>
+          <text id="card-team-member-b" class="cardinality">n</text>
+          <text id="card-team-project-a" class="cardinality">1</text>
+          <text id="card-team-project-b" class="cardinality">n</text>
+          <text id="card-project-evaluation-a" class="cardinality">1</text>
+          <text id="card-project-evaluation-b" class="cardinality">n</text>
+          <text id="card-criterion-evaluation-a" class="cardinality">1</text>
+          <text id="card-criterion-evaluation-b" class="cardinality">n</text>
+          <text id="card-juror-evaluation-a" class="cardinality">1</text>
+          <text id="card-juror-evaluation-b" class="cardinality">n</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <h2>Entitäten</h2>
+
+  <h3>Team</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>name</td><td>STRING</td><td>NOT NULL</td></tr>
+    <tr><td>klasse</td><td>STRING</td><td>NOT NULL</td></tr>
+  </table>
+  <h4>Beispieldaten Team</h4>
+  <table>
+    <tr><th>id</th><th>Name</th><th>Klasse</th></tr>
+    <tr><td>1</td><td>Team 1: Die drei Fragezeichen</td><td>4aAPC</td></tr>
+  </table>
+
+  <h3>Member</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>teamId</td><td>INTEGER</td><td>Fremdschlüssel → Team.id, NOT NULL</td></tr>
+    <tr><td>vorname</td><td>STRING</td><td>NOT NULL</td></tr>
+    <tr><td>nachname</td><td>STRING</td><td>NOT NULL</td></tr>
+  </table>
+  <h4>Beispieldaten Member</h4>
+  <table>
+    <tr><th>id</th><th>teamId</th><th>Vorname</th><th>Nachname</th></tr>
+    <tr><td>1</td><td>1</td><td>Afra</td><td>Avci</td></tr>
+    <tr><td>2</td><td>1</td><td>Melinda</td><td>Novak</td></tr>
+    <tr><td>3</td><td>1</td><td>Hava</td><td>Tasueva</td></tr>
+  </table>
+
+  <h3>Project</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>teamId</td><td>INTEGER</td><td>Fremdschlüssel → Team.id, NOT NULL</td></tr>
+    <tr><td>titel</td><td>STRING</td><td>NOT NULL</td></tr>
+    <tr><td>beschreibung</td><td>TEXT</td><td>NOT NULL</td></tr>
+    <tr><td>praesentiertAm</td><td>DATE</td><td>NOT NULL</td></tr>
+  </table>
+  <h4>Beispieldaten Project</h4>
+  <table>
+    <tr><th>id</th><th>teamId</th><th>Titel</th><th>Beschreibung</th><th>Präsentiert am</th></tr>
+    <tr><td>1</td><td>1</td><td>Example</td><td>Example</td><td>2026-00-00</td></tr>
+  </table>
+
+  <h3>Criterion</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>name</td><td>STRING</td><td>NOT NULL</td></tr>
+    <tr><td>maxScore</td><td>INTEGER</td><td>NOT NULL</td></tr>
+    <tr><td>weight</td><td>FLOAT</td><td>NOT NULL</td></tr>
+  </table>
+  <h4>Beispieldaten Criterion</h4>
+  <table>
+    <tr><th>id</th><th>Name</th><th>MaxScore</th><th>Weight</th></tr>
+    <tr><td>1</td><td>Inhalt</td><td>10</td><td>1.0</td></tr>
+    <tr><td>2</td><td>Präsentationstechnik</td><td>10</td><td>1.0</td></tr>
+    <tr><td>3</td><td>Technische Umsetzung</td><td>10</td><td>1.5</td></tr>
+  </table>
+
+  <h3>Juror</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>name</td><td>STRING</td><td>NOT NULL</td></tr>
+    <tr><td>email</td><td>STRING</td><td>NOT NULL</td></tr>
+  </table>
+  <h4>Beispieldaten Juror</h4>
+  <table>
+    <tr><th>id</th><th>Name</th><th>Email</th></tr>
+    <tr><td>1</td><td>Gehard Jarz</td><td>@lbs-eibsiwald.ac.at</td></tr>
+    <tr><td>2</td><td>Mario Sengwein</td><td>@lbs-eibsiwald.ac.at</td></tr>
+  </table>
+
+  <h3>Evaluation</h3>
+  <table>
+    <tr><th>Spaltenname</th><th>Datentyp</th><th>Constraint</th></tr>
+    <tr><td>id</td><td>INTEGER</td><td>Primärschlüssel, automatisch</td></tr>
+    <tr><td>projectId</td><td>INTEGER</td><td>Fremdschlüssel → Project.id, NOT NULL</td></tr>
+    <tr><td>criterionId</td><td>INTEGER</td><td>Fremdschlüssel → Criterion.id, NOT NULL</td></tr>
+    <tr><td>jurorId</td><td>INTEGER</td><td>Fremdschlüssel → Juror.id, NOT NULL</td></tr>
+    <tr><td>score</td><td>INTEGER</td><td>NOT NULL</td></tr>
+    <tr><td>comment</td><td>TEXT</td><td>NOT NULL</td></tr>
+  </table>
+
+  <p class="note">
+    <strong>Zusätzlich:</strong>
+    Unique-Constraint auf <code>(projectId, criterionId, jurorId)</code>.
+    Dadurch kann derselbe Juror dasselbe Kriterium für dasselbe Projekt nicht mehrfach bewerten.
+  </p>
+
+  <h4>Beispieldaten Evaluation</h4>
+  <table>
+    <tr><th>id</th><th>projectId</th><th>criterionId</th><th>jurorId</th><th>Score</th><th>Comment</th></tr>
+    <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>8</td><td>Konzept klar erklärt</td></tr>
+    <tr><td>2</td><td>1</td><td>2</td><td>1</td><td>7</td><td>Etwas zu textlastige Folien</td></tr>
+    <tr><td>3</td><td>2</td><td>3</td><td>2</td><td>9</td><td>Saubere Hardware-Dokumentation</td></tr>
+  </table>
+</main>
+
+<script>
+(() => {
+  const svg = document.getElementById('diagram');
+  const scene = document.getElementById('scene');
+  const wrap = document.getElementById('diagramWrap');
+  const entities = [...document.querySelectorAll('.entity')];
+
+  const defaults = {};
+  const zoom = { value: 1 };
+  let pan = { x: 0, y: 0 };
+  let drag = null;
+
+  entities.forEach(el => {
+    const x = Number(el.dataset.x);
+    const y = Number(el.dataset.y);
+    defaults[el.dataset.id] = { x, y };
+    el.setAttribute('transform', `translate(${x} ${y})`);
+  });
+
+  function getBox(id) {
+    const el = document.querySelector(`.entity[data-id="${id}"]`);
+    const x = Number(el.dataset.x);
+    const y = Number(el.dataset.y);
+    const rect = el.querySelector('rect');
+    return {
+      x, y,
+      w: Number(rect.getAttribute('width')),
+      h: Number(rect.getAttribute('height')),
+      cx: x + Number(rect.getAttribute('width')) / 2,
+      cy: y + Number(rect.getAttribute('height')) / 2
+    };
+  }
+
+  function anchor(box, other) {
+    const dx = other.cx - box.cx;
+    const dy = other.cy - box.cy;
+    const halfW = box.w / 2;
+    const halfH = box.h / 2;
+    const scaleX = Math.abs(dx) < 0.001 ? Infinity : halfW / Math.abs(dx);
+    const scaleY = Math.abs(dy) < 0.001 ? Infinity : halfH / Math.abs(dy);
+    const scale = Math.min(scaleX, scaleY);
+    return {
+      x: box.cx + dx * scale,
+      y: box.cy + dy * scale
+    };
+  }
+
+  function centerLineText(id, point, dx, dy) {
+    const el = document.getElementById(id);
+    el.setAttribute('x', point.x + dx);
+    el.setAttribute('y', point.y + dy);
+  }
+
+  const relations = [
+    ['Team', 'Member', 'line-team-member', 'card-team-member-a', 'card-team-member-b'],
+    ['Team', 'Project', 'line-team-project', 'card-team-project-a', 'card-team-project-b'],
+    ['Project', 'Evaluation', 'line-project-evaluation', 'card-project-evaluation-a', 'card-project-evaluation-b'],
+    ['Criterion', 'Evaluation', 'line-criterion-evaluation', 'card-criterion-evaluation-a', 'card-criterion-evaluation-b'],
+    ['Juror', 'Evaluation', 'line-juror-evaluation', 'card-juror-evaluation-a', 'card-juror-evaluation-b']
+  ];
+
+  function updateRelations() {
+    relations.forEach(([aId, bId, lineId, caId, cbId]) => {
+      const a = getBox(aId);
+      const b = getBox(bId);
+      const p1 = anchor(a, b);
+      const p2 = anchor(b, a);
+      const line = document.getElementById(lineId);
+      line.setAttribute('x1', p1.x);
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x);
+      line.setAttribute('y2', p2.y);
+
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      const offset = 16;
+
+      centerLineText(caId, p1, nx * offset, ny * offset + 4);
+      centerLineText(cbId, p2, nx * offset, ny * offset + 4);
+    });
+  }
+
+  function updateSceneTransform() {
+    scene.setAttribute('transform', `translate(${pan.x} ${pan.y}) scale(${zoom.value})`);
+    document.getElementById('zoomReset').textContent = `${Math.round(zoom.value * 100)} %`;
+  }
+
+  function svgPoint(evt) {
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    const matrix = svg.getScreenCTM().inverse();
+    return pt.matrixTransform(matrix);
+  }
+
+  entities.forEach(el => {
+    el.addEventListener('pointerdown', (evt) => {
+      evt.stopPropagation();
+      const p = svgPoint(evt);
+      const x = Number(el.dataset.x);
+      const y = Number(el.dataset.y);
+      drag = {
+        el,
+        offsetX: (p.x - pan.x) / zoom.value - x,
+        offsetY: (p.y - pan.y) / zoom.value - y,
+        moved: false
+      };
+      el.setPointerCapture(evt.pointerId);
+    });
+
+    el.addEventListener('pointermove', (evt) => {
+      if (!drag || drag.el !== el) return;
+      const p = svgPoint(evt);
+      const x = (p.x - pan.x) / zoom.value - drag.offsetX;
+      const y = (p.y - pan.y) / zoom.value - drag.offsetY;
+      el.dataset.x = x;
+      el.dataset.y = y;
+      el.setAttribute('transform', `translate(${x} ${y})`);
+      drag.moved = true;
+      updateRelations();
+    });
+
+    el.addEventListener('pointerup', () => { drag = null; });
+    el.addEventListener('pointercancel', () => { drag = null; });
+  });
+
+  let panning = false;
+  let last = null;
+
+  wrap.addEventListener('pointerdown', (evt) => {
+    if (evt.target.closest('.entity')) return;
+    panning = true;
+    last = { x: evt.clientX, y: evt.clientY };
+    wrap.setPointerCapture(evt.pointerId);
+  });
+
+  wrap.addEventListener('pointermove', (evt) => {
+    if (!panning) return;
+    pan.x += (evt.clientX - last.x) * (1200 / wrap.clientWidth) / zoom.value;
+    pan.y += (evt.clientY - last.y) * (650 / wrap.clientHeight) / zoom.value;
+    last = { x: evt.clientX, y: evt.clientY };
+    updateSceneTransform();
+  });
+
+  wrap.addEventListener('pointerup', () => { panning = false; });
+  wrap.addEventListener('pointercancel', () => { panning = false; });
+
+  wrap.addEventListener('wheel', (evt) => {
+    evt.preventDefault();
+    zoom.value = Math.max(0.5, Math.min(2, zoom.value * (evt.deltaY < 0 ? 1.1 : 0.9)));
+    updateSceneTransform();
+  }, { passive: false });
+
+  document.getElementById('zoomIn').addEventListener('click', () => {
+    zoom.value = Math.min(2, zoom.value * 1.15);
+    updateSceneTransform();
+  });
+
+  document.getElementById('zoomOut').addEventListener('click', () => {
+    zoom.value = Math.max(0.5, zoom.value / 1.15);
+    updateSceneTransform();
+  });
+
+  document.getElementById('zoomReset').addEventListener('click', () => {
+    zoom.value = 1;
+    pan = { x: 0, y: 0 };
+    updateSceneTransform();
+  });
+
+  document.getElementById('resetLayout').addEventListener('click', () => {
+    entities.forEach(el => {
+      const pos = defaults[el.dataset.id];
+      el.dataset.x = pos.x;
+      el.dataset.y = pos.y;
+      el.setAttribute('transform', `translate(${pos.x} ${pos.y})`);
+    });
+    zoom.value = 1;
+    pan = { x: 0, y: 0 };
+    updateSceneTransform();
+    updateRelations();
+  });
+
+  updateRelations();
+  updateSceneTransform();
+})();
+</script>
+</body>
+</html>
