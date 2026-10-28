@@ -93,183 +93,77 @@ git tag
 * [x] Kurze Endpunkt-Dokumentation
 * Postman-Testfälle: `docs/einheit4-postman.md`
 
-### Nachweise (Screenshots in `docs/screenshots/`)
+# Backend API – Bewertungsapp
 
-### Aufbau
+## Aufbau
+- `index.js`: Router und Fehlerbehandlung
+- `routes/helpers.js`: Validierung
+- `routes/teams.js`: Teams
+- `routes/projects.js`: Projekte
+- `routes/evaluations.js`: Bewertungen und Statistiken
 
-```
-backend/
-├── index.js              # bindet die Router ein + zentrale Fehlerbehandlung
-└── routes/
-    ├── helpers.js        # Validierungs-Hilfsfunktionen
-    ├── teams.js          # /teams
-    ├── projects.js       # /projects
-    └── evaluations.js    # /evaluations, /evaluations/statistics
-```
+Screenshots: `docs/screenshots/`
 
-Übertragung vom Bibliotheksbeispiel auf die Bewertungsapp:
+## API-Endpunkte
 
-| Bibliotheksbeispiel        | Bewertungsapp                                        |
-| -------------------------- | ---------------------------------------------------- |
-| CRUD für Buch              | CRUD für `Team` und `Project`                        |
-| Ausleihe (Buch + Leser)    | `Evaluation` (Project + Criterion + Juror)           |
-| AVG der Bewertung pro Buch | AVG von `score` pro `projectId` und `criterionId`    |
+### Teams (`/teams`)
+| Methode | Pfad | Funktion |
+|---|---|---|
+| GET | `/teams` | Alle Teams anzeigen |
+| GET | `/teams/:id` | Ein Team anzeigen |
+| POST | `/teams` | Team erstellen |
+| PUT | `/teams/:id` | Team ändern |
+| DELETE | `/teams/:id` | Team löschen |
 
-### Allgemeine Fehlerantworten
+Pflichtfelder: `name`, `klasse`
 
-Alle Fehler kommen als JSON, z. B. `{ "error": "Team mit ID 99 nicht gefunden" }`.
+### Projects (`/projects`)
+| Methode | Pfad | Funktion |
+|---|---|---|
+| GET | `/projects` | Alle Projekte anzeigen |
+| GET | `/projects/:id` | Ein Projekt anzeigen |
+| POST | `/projects` | Projekt erstellen |
+| PUT | `/projects/:id` | Projekt ändern |
+| DELETE | `/projects/:id` | Projekt löschen |
 
-| Status | Bedeutung                                                                       |
-| ------ | ------------------------------------------------------------------------------- |
-| 200    | OK (GET, PUT)                                                                   |
-| 201    | Datensatz angelegt (POST)                                                       |
-| 204    | Datensatz gelöscht (DELETE), kein Body                                          |
-| 400    | Pflichtfeld fehlt, falscher Datentyp, ungültige ID, ungültiges JSON, Fremdschlüssel existiert nicht, score außerhalb des Bereichs |
-| 404    | Datensatz mit der ID in der URL nicht gefunden bzw. unbekannte Route            |
-| 409    | doppelte Bewertung oder Löschen nicht möglich, weil Bewertungen daran hängen    |
-| 500    | unerwarteter Serverfehler                                                       |
+Pflichtfelder: `teamId`, `titel`, `beschreibung`, `praesentiertAm`
 
-### Teams
+### Evaluations (`/evaluations`)
+| Methode | Pfad | Funktion |
+|---|---|---|
+| POST | `/evaluations` | Bewertung erstellen |
+| GET | `/evaluations/statistics` | Durchschnittliche Bewertungen anzeigen |
 
-| Methode | Pfad         | Zweck                                     | Erfolg | Fehler        |
-| ------- | ------------ | ----------------------------------------- | ------ | ------------- |
-| GET     | `/teams`     | alle Teams inkl. `Projects`               | 200    | –             |
-| GET     | `/teams/:id` | ein Team inkl. `Members` und `Projects`   | 200    | 400, 404      |
-| POST    | `/teams`     | Team anlegen                              | 201    | 400           |
-| PUT     | `/teams/:id` | Team vollständig ändern                   | 200    | 400, 404      |
-| DELETE  | `/teams/:id` | Team löschen (Members/Projects per CASCADE) | 204  | 400, 404, 409 |
+Pflichtfelder: `projectId`, `criterionId`, `jurorId`, `score`, `comment`
 
-Request-Body (POST und PUT, beide Felder Pflicht):
+**Validierung:**
+- IDs müssen gültig sein und Datensätze existieren.
+- `score` muss zwischen 0 und dem maximalen Wert des Kriteriums liegen.
+- `comment` darf nicht leer sein.
+- Doppelte Bewertungen sind nicht erlaubt.
 
-```json
-{ "name": "Team Alpha", "klasse": "4aAPC" }
-```
+## HTTP-Statuscodes
 
-Beispielantwort `POST /teams` (201):
+| Code | Bedeutung |
+|---|---|
+| 200 | Erfolgreich |
+| 201 | Datensatz erstellt |
+| 204 | Erfolgreich gelöscht |
+| 400 | Ungültige Eingabe |
+| 404 | Datensatz oder Route nicht gefunden |
+| 409 | Konflikt, z. B. doppelte Bewertung |
+| 500 | Serverfehler |
 
-```json
-{ "id": 1, "name": "Team Alpha", "klasse": "4aAPC", "updatedAt": "2026-10-28T09:00:00.000Z", "createdAt": "2026-10-28T09:00:00.000Z" }
-```
-
-Beispielfehler (400):
-
-```json
-{ "error": "Pflichtfelder fehlen", "fields": ["klasse"] }
-```
-
-`DELETE` liefert 409, wenn zu Projekten des Teams bereits Bewertungen existieren.
-
-### Projects
-
-| Methode | Pfad            | Zweck                                       | Erfolg | Fehler        |
-| ------- | --------------- | ------------------------------------------- | ------ | ------------- |
-| GET     | `/projects`     | alle Projekte inkl. `Team`                  | 200    | –             |
-| GET     | `/projects/:id` | ein Projekt inkl. `Team` und `Evaluations`  | 200    | 400, 404      |
-| POST    | `/projects`     | Projekt anlegen                             | 201    | 400           |
-| PUT     | `/projects/:id` | Projekt vollständig ändern                  | 200    | 400, 404      |
-| DELETE  | `/projects/:id` | Projekt löschen                             | 204    | 400, 404, 409 |
-
-Request-Body (POST und PUT, alle Felder Pflicht, `teamId` muss existieren):
+Fehler werden als JSON zurückgegeben, z. B.:
 
 ```json
-{
-  "teamId": 1,
-  "titel": "Bewertungsapp",
-  "beschreibung": "Ionic-App mit Express-Backend",
-  "praesentiertAm": "2026-11-15"
-}
+{ "error": "Team nicht gefunden" }
 ```
 
-Beispielantwort `GET /projects` (200):
+## Statistiken
+Die Bewertungen werden mit `AVG(score)` pro Projekt und Kriterium berechnet. `COUNT(id)` zählt die Bewertungen. Der Durchschnitt wird als Zahl zurückgegeben.
 
-```json
-[
-  {
-    "id": 1,
-    "teamId": 1,
-    "titel": "Bewertungsapp",
-    "beschreibung": "Ionic-App mit Express-Backend",
-    "praesentiertAm": "2026-11-15T00:00:00.000Z",
-    "createdAt": "2026-10-28T09:00:00.000Z",
-    "updatedAt": "2026-10-28T09:00:00.000Z",
-    "Team": { "id": 1, "name": "Team Alpha", "klasse": "4aAPC", "createdAt": "…", "updatedAt": "…" }
-  }
-]
-```
-
-Beispielfehler (400):
-
-```json
-{ "error": "Team mit ID 99 existiert nicht" }
-```
-
-`DELETE` liefert 409, wenn für das Projekt bereits Bewertungen existieren.
-
-### Evaluations
-
-| Methode | Pfad                       | Zweck                                         | Erfolg | Fehler   |
-| ------- | -------------------------- | --------------------------------------------- | ------ | -------- |
-| POST    | `/evaluations`             | Bewertung anlegen                             | 201    | 400, 409 |
-| GET     | `/evaluations/statistics`  | Durchschnitt von `score` pro Projekt/Kriterium | 200   | –        |
-
-Request-Body `POST /evaluations` (alle Felder Pflicht):
-
-```json
-{ "projectId": 1, "criterionId": 1, "jurorId": 1, "score": 8, "comment": "Gute Idee" }
-```
-
-Validierung:
-
-* `projectId`, `criterionId`, `jurorId`: positive Ganzzahlen, Datensätze müssen existieren
-* `score`: Ganzzahl von `0` bis `maxScore` des Kriteriums
-* `comment`: nicht-leerer Text
-* doppelte Bewertung (gleiches `projectId`, `criterionId`, `jurorId`) → 409 über den Unique-Constraint `unique_evaluation`
-
-Beispielantwort (201):
-
-```json
-{ "id": 1, "projectId": 1, "criterionId": 1, "jurorId": 1, "score": 8, "comment": "Gute Idee", "updatedAt": "…", "createdAt": "…" }
-```
-
-Beispielfehler:
-
-```json
-{ "error": "score muss zwischen 0 und 10 liegen (Kriterium \"Innovation\")" }
-```
-
-```json
-{ "error": "Referenzierte Datensätze existieren nicht", "notFound": ["Juror mit ID 99"] }
-```
-
-```json
-{ "error": "Dieser Juror hat dieses Projekt für dieses Kriterium bereits bewertet" }
-```
-
-Beispielantwort `GET /evaluations/statistics` (200):
-
-```json
-[
-  { "projectId": 1, "criterionId": 1, "averageScore": 7.5, "evaluationCount": 2 },
-  { "projectId": 1, "criterionId": 2, "averageScore": 10, "evaluationCount": 1 }
-]
-```
-
-Umsetzung mit Sequelize (MySQL liefert `AVG` als DECIMAL-String, daher Umwandlung in eine Zahl):
-
-```js
-Evaluation.findAll({
-  attributes: [
-    'projectId',
-    'criterionId',
-    [fn('AVG', col('score')), 'averageScore'],
-    [fn('COUNT', col('id')), 'evaluationCount']
-  ],
-  group: ['projectId', 'criterionId'],
-  raw: true
-});
-```
-
-## Einheit 5: Postman-Test
+## ~~Einheit 5: Postman-Test~~
 
 * [ ] Collection: `docs/postman/bewertungsapp.postman_collection.json`
 * [ ] Environment: `docs/postman/bewertungsapp.postman_environment.json`
