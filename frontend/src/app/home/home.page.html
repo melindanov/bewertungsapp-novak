@@ -12,17 +12,17 @@
   </ion-header>
 
   @if (loading()) {
-    <ion-item lines="none">
+    <ion-item>
       <ion-spinner slot="start"></ion-spinner>
       <ion-label>Projekte werden geladen …</ion-label>
     </ion-item>
   } @else if (error()) {
-    <ion-item lines="none">
-      <ion-label color="danger" class="ion-text-wrap">{{ error() }}</ion-label>
+    <ion-item>
+      <ion-label class="ion-text-wrap">{{ error() }}</ion-label>
     </ion-item>
-    <ion-button fill="clear" (click)="loadProjects()">Erneut versuchen</ion-button>
+    <ion-button (click)="loadProjects()">Erneut versuchen</ion-button>
   } @else if (projects().length === 0) {
-    <ion-item lines="none">
+    <ion-item>
       <ion-label>Keine Projekte vorhanden.</ion-label>
     </ion-item>
   } @else {

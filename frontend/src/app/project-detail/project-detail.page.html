@@ -9,13 +9,13 @@
 
 <ion-content [fullscreen]="true">
   @if (loading()) {
-    <ion-item lines="none">
+    <ion-item>
       <ion-spinner slot="start"></ion-spinner>
       <ion-label>Projekt wird geladen …</ion-label>
     </ion-item>
   } @else if (error()) {
-    <ion-item lines="none">
-      <ion-label color="danger" class="ion-text-wrap">{{ error() }}</ion-label>
+    <ion-item>
+      <ion-label class="ion-text-wrap">{{ error() }}</ion-label>
     </ion-item>
   } @else if (project(); as project) {
     <ion-list>
@@ -51,7 +51,7 @@
           </ion-note>
         </ion-item>
       } @empty {
-        <ion-item lines="none">
+        <ion-item>
           <ion-label>Noch keine Bewertungen vorhanden.</ion-label>
         </ion-item>
       }
