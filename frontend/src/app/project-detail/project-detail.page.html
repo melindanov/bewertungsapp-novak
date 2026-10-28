@@ -1,0 +1,60 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="Projekte"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ project()?.titel ?? 'Projekt' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading()) {
+    <ion-item lines="none">
+      <ion-spinner slot="start"></ion-spinner>
+      <ion-label>Projekt wird geladen …</ion-label>
+    </ion-item>
+  } @else if (error()) {
+    <ion-item lines="none">
+      <ion-label color="danger" class="ion-text-wrap">{{ error() }}</ion-label>
+    </ion-item>
+  } @else if (project(); as project) {
+    <ion-list>
+      <ion-item>
+        <ion-label class="ion-text-wrap">
+          <h2>{{ project.titel }}</h2>
+          <p>{{ project.beschreibung }}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Team</ion-label>
+        <ion-note slot="end">{{ project.Team?.name ?? '–' }} ({{ project.Team?.klasse ?? '–' }})</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-label>Präsentiert am</ion-label>
+        <ion-note slot="end">{{ project.praesentiertAm | date: 'dd.MM.yyyy' }}</ion-note>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
+      <ion-list-header>
+        <ion-label>Bewertungen</ion-label>
+      </ion-list-header>
+      @for (evaluation of project.Evaluations ?? []; track evaluation.id) {
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <h3>{{ evaluation.Criterion?.name ?? 'Kriterium ' + evaluation.criterionId }}</h3>
+            <p>Juror: {{ evaluation.Juror?.name ?? evaluation.jurorId }}</p>
+            <p>{{ evaluation.comment }}</p>
+          </ion-label>
+          <ion-note slot="end">
+            {{ evaluation.score }}@if (evaluation.Criterion) { / {{ evaluation.Criterion.maxScore }}}
+          </ion-note>
+        </ion-item>
+      } @empty {
+        <ion-item lines="none">
+          <ion-label>Noch keine Bewertungen vorhanden.</ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

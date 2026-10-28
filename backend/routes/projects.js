@@ -1,5 +1,5 @@
 const express = require('express');
-const { Project, Team, Evaluation } = require('../models');
+const { Project, Team, Evaluation, Criterion, Juror } = require('../models');
 const { toPositiveInt, isNonEmptyString, isValidDate, missingFields } = require('./helpers');
 
 const router = express.Router();
@@ -64,9 +64,14 @@ router.get('/', async (req, res) => {
     res.json(projects);
 });
 
-// GET /projects/:id – ein Projekt inkl. Team und Bewertungen
+// GET /projects/:id – ein Projekt inkl. Team und Bewertungen (mit Kriterium und Juror-Name)
 router.get('/:id', async (req, res) => {
-    const project = await findProjectOr404(req, res, { include: [Team, Evaluation] });
+    const project = await findProjectOr404(req, res, {
+        include: [
+            Team,
+            { model: Evaluation, include: [Criterion, { model: Juror, attributes: ['id', 'name'] }] }
+        ]
+    });
     if (!project) return;
     res.json(project);
 });

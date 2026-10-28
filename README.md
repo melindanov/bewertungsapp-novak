@@ -278,9 +278,29 @@ Evaluation.findAll({
 
 ## Einheit 6: IONIC-Frontend
 
-* [ ] Projektliste mit Team-Zuordnung
-* [ ] Detailansicht eines Projekts mit bisherigen Bewertungen
-* [ ] API-Service vollständig an eigenes Backend angebunden
+* [x] Projektliste mit Team-Zuordnung
+* [x] Detailansicht eines Projekts mit bisherigen Bewertungen
+* [x] API-Service vollständig an eigenes Backend angebunden
+
+Voraussetzungen: Backend läuft (`docker compose up -d`, `cd backend && node index.js`).
+
+```bash
+cd frontend
+npm install   # nur beim ersten Mal
+ionic serve   # http://localhost:8100
+```
+
+API-URL: `http://localhost:3000` (`frontend/src/environments/environment.ts`)
+
+* `/home` – Projektliste mit Team
+* `/projects/:id` – Projektdetail mit Team und Bewertungen (Kriterium, Punkte, Kommentar)
+* `frontend/src/app/services/api.service.ts` – `GET /projects`, `GET /projects/:id`
+
+Screenshots (`docs/screenshots/`):
+
+* [ ] `e6-projektliste.png`
+* [ ] `e6-projektdetail.png`
+* [ ] `e6-api-service.png`
 
 ## Einheit 7: Login und Endabgabe
 

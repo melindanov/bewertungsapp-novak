@@ -9,6 +9,17 @@ const PORT = 3000;
 
 app.use(express.json());
 
+// CORS für das Ionic-Frontend (ionic serve läuft auf einem anderen Port)
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+    next();
+});
+
 app.get("/", (req, res) => {
     res.json({
         message: "Bewertungsapp Backend läuft!"
