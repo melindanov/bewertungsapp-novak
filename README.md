@@ -95,13 +95,6 @@ git tag
 
 ### Nachweise (Screenshots in `docs/screenshots/`)
 
-* [ ] `e4-routes.png` – Router-Dateien und Einbindung in `index.js`
-* [ ] `e4-team-crud.png` – Team-CRUD in Postman
-* [ ] `e4-project-crud.png` – Project-CRUD in Postman
-* [ ] `e4-evaluation-validation.png` – Evaluation: 201, 400 und 409
-* [ ] `e4-aggregation.png` – `GET /evaluations/statistics`
-* [ ] `e4-readme.png` – diese Endpunkt-Dokumentation
-
 ### Aufbau
 
 ```
