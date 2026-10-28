@@ -192,10 +192,6 @@ API-URL: `http://localhost:3000` (`frontend/src/environments/environment.ts`)
 
 Screenshots (`docs/screenshots/`):
 
-* [ ] `e6-projektliste.png`
-* [ ] `e6-projektdetail.png`
-* [ ] `e6-api-service.png`
-
 ## Einheit 7: Login und Endabgabe
 
 * [ ] Bewertungsformular (Projekt, Kriterium, Punktzahl, Kommentar) mit Validierung
